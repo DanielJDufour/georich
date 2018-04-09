@@ -19,5 +19,5 @@ enriched_df = enrich(df, country_code=True)
 coming soon!
 
 ### Users
-[FirstDraftGIS](https://firstdraftgis.com)
-[TweetGeoLocator](https://tweetgeolocator.com)
+- [FirstDraftGIS](https://firstdraftgis.com)
+- [TweetGeoLocator](https://tweetgeolocator.com)
