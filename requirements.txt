@@ -1,0 +1,6 @@
+django-extensions
+Django
+freq
+numpy
+pandas
+scipy
