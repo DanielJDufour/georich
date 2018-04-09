@@ -19,6 +19,8 @@ def run(i, save_path=None, in_memory=False, debug=False):
             print("\tsave_path:", save_path)
             print("\tin_memory:", in_memory)
             print("\tdebug:", debug)
+        
+        input_type = str(type(i))
     
         # convert input to list of dicts
         if isinstance(i, list) and isinstance(i[0], dict):
@@ -37,6 +39,11 @@ def run(i, save_path=None, in_memory=False, debug=False):
                 print("thing:", thing)
             iterator = list(_grouper)
             keys = list(iterator[0].keys())
+        elif input_type == "<class 'django.db.models.query.QuerySet'>":
+            iterator = i
+            keys = list(iterator[0].keys())
+        else:
+            print("can't enrich type:", type(i))
     
         if debug: print("\titerator:", iterator)
     
@@ -93,10 +100,17 @@ def run(i, save_path=None, in_memory=False, debug=False):
         for item in iterator:
             item["has_enwiki_title"] = simple_has(item, 'enwiki_title')
             if tracker: s.add(item[tracker])
-            item["has_population_over_1_million"] = has_over(item, "population", 1e6)
-            item["has_population_over_1_thousand"] = has_over(item, "population", 1e3)
-            item["has_population_over_1_hundred"] = has_over(item, "population", 1e2)
-            item["is_admin"] = is_admin(item)
+            try:
+                item["has_population_over_1_million"] = has_over(item, "population", 1e6)
+                item["has_population_over_1_thousand"] = has_over(item, "population", 1e3)
+                item["has_population_over_1_hundred"] = has_over(item, "population", 1e2)
+            except Exception as e:
+                print("[georich] exception adding population columns")
+
+            try:
+                item["is_admin"] = is_admin(item)
+            except Exception as e:
+                print("[georich] exception adding is_admin column:", e)
     
             """
                 Set importance is 0.25 if no importance is set.
