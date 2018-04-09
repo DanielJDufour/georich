@@ -1,6 +1,11 @@
 # georich
 Enrich your Geospatial Data!
 
+# installation
+```
+pip install georich
+```
+
 # usage
 You can use georich by importing Python methods or hitting the API.
 
