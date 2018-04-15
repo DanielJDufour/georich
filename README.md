@@ -1,3 +1,5 @@
+# NOTE: HIGHLY EXPERIMENTAL AND NOT READY FOR PRODUCTION USE
+
 # georich
 Enrich your Geospatial Data!
 
