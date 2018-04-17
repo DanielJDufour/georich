@@ -22,8 +22,21 @@ df = read_csv("/tmp/survey_locations.csv")
 enriched_df = enrich(df, country_code=True)
 ```
 
-### API Usage
-coming soon!
+### Run API Server
+```
+from georich import run_server
+
+run_server()
+```
+```
+Performing system checks...
+
+System check identified no issues (0 silenced).
+April 17, 2018 - 03:59:10
+Django version 2.0.4, using settings 'georich.core.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+```
 
 ### Users
 - [FirstDraftGIS](https://firstdraftgis.com)
