@@ -51,7 +51,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'georich.urls'
+ROOT_URLCONF = 'georich.core.urls'
 
 TEMPLATES = [
     {
@@ -69,7 +69,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'georich.wsgi.application'
+WSGI_APPLICATION = 'georich.core.wsgi.application'
 
 
 # Database
