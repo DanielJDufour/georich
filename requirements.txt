@@ -4,3 +4,4 @@ freq
 numpy
 pandas
 scipy
+word2number
