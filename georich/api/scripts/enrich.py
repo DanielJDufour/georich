@@ -11,13 +11,27 @@ from marge.cleaner import has, has_over, is_truthy, simple_has
 from marge.enumerations import incompletes, nulls
 from marge.utils import is_admin, is_complete, max_by_group
 
-def intify(inpt):
-    try:
-        return w2n.word_to_num(inpt)
-    except:
-        return int(inpt.replace("_", ""))
+def is_between(n, lowest, highest):
+    if n == "":
+        return 0
+    else:
+        try:
+            return 1 if intify(lowest) <= intify(n) <= intify(highest) else 0
+        except Exception as e:
+            print("[is_between] returned 0 because", e)
+            return 0
 
-def run(i, new_fields=None, save_path=None, in_memory=False, debug=False):
+def intify(inpt):
+    #print("starting intify with:", [inpt])
+    if isinstance(inpt, int):
+        return inpt
+    else:
+        try:
+            return w2n.word_to_num(inpt.replace("_", " "))
+        except:
+            return int(inpt.replace("_", ""))
+
+def run(i, new_fields=None, save_path=None, in_memory=False, debug=False, track=None):
 
     try:
 
@@ -68,15 +82,14 @@ def run(i, new_fields=None, save_path=None, in_memory=False, debug=False):
         if in_memory:
             items = []
 
-        if "score" in old_fields and "feature_id" in old_fields:
-            maxes = max_by_group(iterator, "score", "feature_id")
-            for item in iterator:
-                fid = item["feature_id"]
-                prob = item["score"]
-                item["likely_correct"] = 1 if prob == maxes[fid] else 0
+        #print('iterator:', type(iterator))
 
-        print('iterator:', type(iterator))
+        if "likely_correct" in iterator[0]:
+            country_codes = [ i["country_code"].lower() for i in iterator if i["likely_correct"] and i["country_code"] ]
+        else:
+            country_codes = None
 
+        """
         if "country_code_frequency" in new_fields:
             all_country_codes = [ i["country_code"].lower() for i in iterator if i["likely_correct"] and i["country_code"] ]
             freqs = Freq(all_country_codes)
@@ -84,32 +97,55 @@ def run(i, new_fields=None, save_path=None, in_memory=False, debug=False):
                 cc = item["country_code"].lower() if item["country_code"] else None
                 item["country_code_frequency"] = freqs[cc]
 
-        print("calc'd country code frequencies")
+        if "place_type_frequency" in new_fields:
+            all_place_types = [ i["place_type"].lower() for i in iterator if i["likely_correct"] and i["place_type"] ]
+            freqs = Freq(all_place_types)
+            for item in iterator:
+                cc = item["place_type"].lower() if item["place_type"] else None
+                item["place_type_frequency"] = freqs[cc]
+        """
+
+        #print("calc'd country code frequencies")
 
         possible_has_fields = ["has_" + field for field in old_fields if not field.startswith("has")]
-        print("possible_has_fields:", possible_has_fields)
+        #print("possible_has_fields:", possible_has_fields)
         possible_is_zero_fields = [field + "_is_zero" for field in old_fields if not field.endswith("is_zero")]
-        print("possible_is_zero_fields:", possible_is_zero_fields)
+        #print("possible_is_zero_fields:", possible_is_zero_fields)
 
+        if track: tracked = set()
         for item in iterator:
             try:
-                print("new_fields:", new_fields)
+
+                if track:
+                    tracked.add(item[track])
+                #print("new_fields:", new_fields)
                 for field in new_fields:
                     try:
                         # check if item has a field
+                        if "likely_correct" in iterator[0]:
+                            item["country_code_has_match"] = 1 if (0 <= len(country_codes) <= 1) or country_codes.count(item["country_code"]) > 1 else 0
+
+
                         if field in possible_has_fields:
                             #print("field " + field + " in possible_has_fields")
                             item[field] = simple_has(item, field.replace("has_",""))
                         elif field in possible_is_zero_fields:
                             #print(field, "is zero field")
-                            item[field] = 1 if item[field.replace("_is_zero","")] in [0, None, False, "null", "Null", "None"] else 0
+                            item[field] = 1 if item[field.replace("_is_zero","")] in ['0', 0, None, False, "null", "Null", "None"] else 0
                         else:
+
                             # check if item's amount is over a threshold
-                            #print("field:", field)
                             mg = match("has_(?P<original>[A-Za-z_]+)_over_(?P<n>[A-Za-z_\d]+)", field)
                             if mg:
                                 #print("matched threshold")
                                 item[field] = has_over(item, mg.group("original"), intify(mg.group("n")))
+                                continue
+
+                            mg = match("has_(?P<original>[A-Za-z_]+)_between_(?P<n1>[A-Za-z_\d]+)_and_(?P<n2>[A-Za-z_\d]+)", field)
+                            if mg:
+                                #print("matched threshold")
+                                item[field] = is_between(item[mg.group("original")], mg.group("n1"), mg.group("n2"))
+
                     except Exception as e:
                         print("[georich] exception on field:", field, ":", e)
 
@@ -138,6 +174,9 @@ def run(i, new_fields=None, save_path=None, in_memory=False, debug=False):
             if in_memory:
                 if debug: print("appended:", item)
                 items.append(item)
+
+        if track:
+            print("tracked:", tracked)
 
         if in_memory:
             return items
